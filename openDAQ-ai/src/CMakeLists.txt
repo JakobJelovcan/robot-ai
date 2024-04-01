@@ -1,18 +1,10 @@
 set(SRC_Cpp
     main.cpp
-    common.cpp
-    common-sdl.cpp
-    common-ggml.cpp
-    grammar-parser.cpp
+    whisper_wrapper.cpp
 )
     
 set(SRC_PublicHeaders
-    main.hpp
-    common.h
-    dr_wav.h
-    common-sdl.h
-    common-ggml.h
-    grammar-parser.h
+    whisper_wrapper.hpp
 )
 
 prepend_include(${TARGET_FOLDER_NAME} SRC_PublicHeaders)
@@ -27,6 +19,7 @@ target_link_libraries(
     ${REPO_NAME} PRIVATE
                     daq::opendaq
                     whisper
+                    whisper-common
                     Boost::program_options
                     Boost::algorithm
                     ${SDL2_LIBRARIES}

@@ -1,4 +1,4 @@
-#include <openDAQ-ai/common-sdl.h>
+#include <whisper-common/common-sdl.h>
 
 audio_async::audio_async(int len_ms) {
     m_len_ms = len_ms;
@@ -195,6 +195,9 @@ void audio_async::get(int ms, std::vector<float> & result) {
         }
 
         result.resize(n_samples);
+
+        if (result.size() == 0)
+            return;
 
         int s0 = m_audio_pos - n_samples;
         if (s0 < 0) {

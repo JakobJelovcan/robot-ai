@@ -41,4 +41,5 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -gdwarf-2")
 endif()
 
+add_subdirectory(whisper-common)
 add_subdirectory(${REPO_NAME})
