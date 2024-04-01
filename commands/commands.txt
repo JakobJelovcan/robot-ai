@@ -1,0 +1,4 @@
+wave
+sleep
+wake
+talk
