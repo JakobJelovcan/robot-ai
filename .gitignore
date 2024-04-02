@@ -1,3 +1,4 @@
 .vscode
 build/*
 models/*.bin
+models/*.gguf
