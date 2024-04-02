@@ -2,39 +2,40 @@
 #include <boost/program_options.hpp>
 #include <format>
 #include <iostream>
+#include <robot-ai/llama_wrapper.hpp>
 #include <robot-ai/whisper_wrapper.hpp>
 
 using namespace std::chrono_literals;
 
-daq::DevicePtr obsidian_dev;
-daq::FunctionBlockPtr robot_fb;
+void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma::llama_config& llama_config);
+void invoke_command(daq::FunctionBlockPtr& fb, const std::string& command);
 
-void parse_args(int argc, char* argv[], whs::whisper_config& config);
-void send_command(const std::string& command);
-daq::FunctionBlockPtr find_robot_fb(daq::DevicePtr& device);
+auto get_robot_fb(daq::DevicePtr& device) -> daq::FunctionBlockPtr;
 
 auto main(int argc, char* argv[]) -> int
 {
-    const auto instance = daq::Instance();
-    obsidian_dev = instance.addDevice("daq.opcua://192.168.10.1");
-    robot_fb = find_robot_fb(obsidian_dev);
-
     auto whisper_config = whs::whisper_get_default_config();
-    parse_args(argc, argv, whisper_config);
+    auto llama_config = lma::llama_get_default_config();
+    parse_args(argc, argv, whisper_config, llama_config);
+
+    const auto instance = daq::Instance();
+    auto device = instance.addDevice("daq.opcua://192.168.10.1");
+    auto robot_fb = get_robot_fb(device);
 
     auto whisper = whs::whisper::build_whisper(whisper_config);
+    auto llama = lma::llama::build_llama(llama_config);
 
-    if (!whisper)
+    if (!whisper || !llama)
         exit(EXIT_FAILURE);
 
-    whisper->on_command = send_command;
+    whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
 
     whisper->whisper_loop();
 
     return 0;
 }
 
-void parse_args(int argc, char* argv[], whs::whisper_config& config)
+void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma::llama_config& llama_config)
 {
     // clang-format off
     namespace po = boost::program_options;
@@ -42,18 +43,20 @@ void parse_args(int argc, char* argv[], whs::whisper_config& config)
     desc.add_options()
         ("help,h",                                      "Print help")
         ("threads,t",       po::value<int32_t>(),       "Number of threads")
-        ("prompt-ms,pms",   po::value<int32_t>(),       "Prompt ms")
-        ("command-ms,cms",  po::value<int32_t>(),       "Command ms")
+        ("gpu-layers",      po::value<int32_t>(),       "Number of gpu layers")
+        ("prompt-ms",       po::value<int32_t>(),       "Prompt ms")
+        ("command-ms",      po::value<int32_t>(),       "Command ms")
         ("capture,c",       po::value<int32_t>(),       "Capture device id")
-        ("max-tokens,mt",   po::value<int32_t>(),       "Max tokens")
-        ("audio-ctx,ac",    po::value<int32_t>(),       "Audio context")
-        ("vad-thold,vth",   po::value<float>(),         "Vad threshold")
-        ("freq-thold,fth",  po::value<float>(),         "Frequency threshold")
-        ("no-gpu,ng",                                   "Don't use gpu")
-        ("model,m",         po::value<std::string>(),   "Model")
-        ("commands,cmd",    po::value<std::string>(),   "Command file name")
+        ("max-tokens",      po::value<int32_t>(),       "Max tokens")
+        ("audio-ctx",       po::value<int32_t>(),       "Audio context")
+        ("vad-thold",       po::value<float>(),         "Vad threshold")
+        ("freq-thold",      po::value<float>(),         "Frequency threshold")
+        ("no-gpu",                                      "Don't use gpu")
+        ("whisper-model",   po::value<std::string>(),   "whisper model")
+        ("llama-model",     po::value<std::string>(),   "llama model")
+        ("commands",        po::value<std::string>(),   "Command file name")
         ("prompt,p",        po::value<std::string>(),   "Prompt")
-        ("context,ctx",     po::value<std::string>(),   "Context");
+        ("context",         po::value<std::string>(),   "Context");
 
     po::variables_map variable_map;
     po::store(po::parse_command_line(argc, argv, desc), variable_map);
@@ -66,59 +69,65 @@ void parse_args(int argc, char* argv[], whs::whisper_config& config)
     }
 
     if (variable_map.count("threads") != 0u)
-        config.n_threads = variable_map["threads"].as<int32_t>();
+        llama_config.n_threads = whisper_config.n_threads = variable_map["threads"].as<int32_t>();
+
+    if (variable_map.count("gpu-layers") != 0u)
+        llama_config.n_gpu_layers = variable_map["gpu-layers"].as<int32_t>();
 
     if (variable_map.count("prompt-ms") != 0u)
-        config.prompt_ms = variable_map["prompt-ms"].as<int32_t>();
+        whisper_config.prompt_ms = variable_map["prompt-ms"].as<int32_t>();
 
     if (variable_map.count("command-ms") != 0u)
-        config.command_ms = variable_map["command-ms"].as<int32_t>();
+        whisper_config.command_ms = variable_map["command-ms"].as<int32_t>();
 
     if (variable_map.count("capture") != 0u)
-        config.capture_id = variable_map["capture"].as<int32_t>();
+        whisper_config.capture_id = variable_map["capture"].as<int32_t>();
 
     if (variable_map.count("max-tokens") != 0u)
-        config.max_tokens = variable_map["max-tokens"].as<int32_t>();
+        whisper_config.max_tokens = variable_map["max-tokens"].as<int32_t>();
 
     if (variable_map.count("audio-ctx") != 0u)
-        config.audio_ctx = variable_map["audio-ctx"].as<int32_t>();
+        whisper_config.audio_ctx = variable_map["audio-ctx"].as<int32_t>();
 
     if (variable_map.count("vad-thold") != 0u)
-        config.vad_threshold = variable_map["vad-thold"].as<float>();
+        whisper_config.vad_threshold = variable_map["vad-thold"].as<float>();
 
     if (variable_map.count("freq-thold") != 0u)
-        config.freq_threshold = variable_map["freq-thold"].as<float>();
+        whisper_config.freq_threshold = variable_map["freq-thold"].as<float>();
 
     if (variable_map.count("no-gpu") != 0u)
-        config.use_gpu = false;
+        whisper_config.use_gpu = false;
 
-    if (variable_map.count("model") != 0u)
-        config.model = variable_map["model"].as<std::string>();
+    if (variable_map.count("whisper-model") != 0u)
+        whisper_config.model = variable_map["whisper-model"].as<std::string>();
+
+    if (variable_map.count("llama-model") != 0u)
+        llama_config.model = variable_map["llama-model"].as<std::string>();
 
     if (variable_map.count("commands") != 0u)
-        config.commands = variable_map["commands"].as<std::string>();
+        whisper_config.commands = variable_map["commands"].as<std::string>();
 
     if (variable_map.count("prompt") != 0u)
-        config.prompt = variable_map["prompt"].as<std::string>();
+        whisper_config.prompt = variable_map["prompt"].as<std::string>();
 
     if (variable_map.count("context") != 0u)
-        config.context = variable_map["context"].as<std::string>();
+        whisper_config.context = variable_map["context"].as<std::string>();
 
     // clang-format on
 }
 
-void send_command(const std::string& command)
+void invoke_command(daq::FunctionBlockPtr& fb, const std::string& command)
 {
-    if (!robot_fb.assigned())
+    if (!fb.assigned())
         return;
 
-    daq::ProcedurePtr procedure = robot_fb.getPropertyValue("InvokeCommand");
+    daq::ProcedurePtr procedure = fb.getPropertyValue("InvokeCommand");
     procedure(command);
 
     std::cout << std::format("[main] Invoked command: {}", command) << std::endl;
 }
 
-daq::FunctionBlockPtr find_robot_fb(daq::DevicePtr& device)
+auto get_robot_fb(daq::DevicePtr& device) -> daq::FunctionBlockPtr
 {
     for (auto fb : device.getFunctionBlocks())
     {

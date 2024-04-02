@@ -1,10 +1,12 @@
 set(SRC_Cpp
     main.cpp
     whisper_wrapper.cpp
+    llama_wrapper.cpp
 )
     
 set(SRC_PublicHeaders
     whisper_wrapper.hpp
+    llama_wrapper.hpp
 )
 
 prepend_include(${TARGET_FOLDER_NAME} SRC_PublicHeaders)
@@ -17,9 +19,9 @@ add_executable(${REPO_NAME}
 target_link_libraries(
     ${REPO_NAME} PRIVATE
                     daq::opendaq
+                    ggml
                     whisper
-                    whisper-common
-                    llama-common
+                    llama
                     SDL2-static
                     Boost::program_options
                     Boost::algorithm
