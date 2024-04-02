@@ -1,4 +1,4 @@
-set(LIB_NAME llama-common)
+set(LIB_NAME llama)
 
 set(SRC_Cpp
     common.cpp
@@ -29,7 +29,7 @@ add_library(${LIB_NAME} STATIC
 
 target_link_libraries(
     ${LIB_NAME} PRIVATE
-                whisper
+                ggml
 )
 
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)

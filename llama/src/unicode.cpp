@@ -1,5 +1,5 @@
-#include <llama-common/unicode.h>
-#include <llama-common/unicode-data.h>
+#include <llama/unicode.h>
+#include <llama/unicode-data.h>
 
 #include <cassert>
 #include <cstddef>

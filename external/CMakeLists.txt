@@ -9,4 +9,4 @@ include(FetchContent)
 
 add_subdirectory(openDAQ)
 add_subdirectory(SDL)
-add_subdirectory(whisper.cpp)
+add_subdirectory(ggml)

@@ -1,4 +1,4 @@
-#include <whisper-common/common-sdl.h>
+#include <whisper/common-sdl.h>
 
 audio_async::audio_async(int len_ms) {
     m_len_ms = len_ms;

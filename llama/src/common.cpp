@@ -1,5 +1,5 @@
-#include <llama-common/common.h>
-#include <llama-common/llama.h>
+#include <llama/common.h>
+#include <llama/llama.h>
 
 #include <algorithm>
 #include <cassert>

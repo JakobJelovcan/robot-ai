@@ -1,4 +1,4 @@
-#include <llama-common/grammar-parser.h>
+#include <llama/grammar-parser.h>
 #include <cstdint>
 #include <cwchar>
 #include <string>

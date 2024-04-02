@@ -1,7 +1,7 @@
 #define LLAMA_API_INTERNAL
-#include <llama-common/llama.h>
+#include <llama/llama.h>
 
-#include <llama-common/unicode.h>
+#include <llama/unicode.h>
 
 #include "ggml.h"
 #include "ggml-alloc.h"

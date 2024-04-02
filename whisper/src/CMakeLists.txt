@@ -1,12 +1,14 @@
-set(LIB_NAME whisper-common)
+set(LIB_NAME whisper)
 
 set(SRC_Cpp
+    whisper.cpp
     common.cpp
     common-sdl.cpp
     common-ggml.cpp
 )
     
 set(SRC_PublicHeaders
+    whisper.h
     common.h
     common-sdl.h
     common-ggml.h
@@ -22,7 +24,7 @@ add_library(${LIB_NAME} STATIC
 
 target_link_libraries(
     ${LIB_NAME} PRIVATE
-                whisper
+                ggml
                 SDL2-static
 )
 
