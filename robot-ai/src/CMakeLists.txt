@@ -19,6 +19,7 @@ target_link_libraries(
                     daq::opendaq
                     whisper
                     whisper-common
+                    llama-common
                     SDL2-static
                     Boost::program_options
                     Boost::algorithm

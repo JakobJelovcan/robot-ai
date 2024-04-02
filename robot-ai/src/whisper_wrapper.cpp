@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <format>
 #include <iostream>
-#include <openDAQ-ai/whisper_wrapper.hpp>
+#include <robot-ai/whisper_wrapper.hpp>
 
 namespace whs
 {
@@ -284,9 +284,9 @@ namespace whs
             .vad_threshold = 0.6f,
             .freq_threshold = 100.0,
             .use_gpu = true,
-            .model = "/home/jakob/git/openDAQ-ai/models/ggml-large-v2-q5_0.bin",
+            .model = "/home/jakob/git//models/ggml-large-v2-q5_0.bin",
             .prompt = "hey darko",
-            .commands = "/home/jakob/git/openDAQ-ai/commands/commands.txt",
+            .commands = "/home/jakob/git//commands/commands.txt",
             .context = "hello how is it going always use lowercase no punctuation goodbye one two three start stop i you me they hey darko "
                        "wake wave sleep jump lowercase no ponctuation hello hey darko go to sleep wake up wave by",
         };

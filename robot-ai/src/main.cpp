@@ -2,7 +2,7 @@
 #include <boost/program_options.hpp>
 #include <format>
 #include <iostream>
-#include <openDAQ-ai/whisper_wrapper.hpp>
+#include <robot-ai/whisper_wrapper.hpp>
 
 using namespace std::chrono_literals;
 

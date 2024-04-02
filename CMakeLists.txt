@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-set(REPO_NAME openDAQ-ai)
+set(REPO_NAME robot-ai)
 set(REPO_OPTION_PREFIX AI)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,9 +19,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(OPENDAQ_ENABLE_TESTS OFF CACHE BOOL "Disable tests")
+set(OPENDAQ_ENABLE_OPCUA ON CACHE BOOL "Enable OPCUA")
+set(OPENDAQ_ENABLE_WEBSOCKET_STREAMING ON CACHE BOOL "Enable websocket streaming")
+set(OPENDAQ_ENABLE_NATIVE_STREAMING ON CACHE BOOL "Enable native streaming")
+
 add_subdirectory(external)
 
-project(openDAQ-ai
+project(robot-ai
         LANGUAGES CXX
         VERSION 1.0.0
 )
@@ -42,4 +47,5 @@ if (NOT MSVC)
 endif()
 
 add_subdirectory(whisper-common)
+add_subdirectory(llama-common)
 add_subdirectory(${REPO_NAME})
