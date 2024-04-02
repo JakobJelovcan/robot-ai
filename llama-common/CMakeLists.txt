@@ -1,0 +1,2 @@
+get_current_folder_name(TARGET_FOLDER_NAME)
+add_subdirectory(src)
