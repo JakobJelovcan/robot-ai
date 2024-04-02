@@ -10,7 +10,6 @@ set(SRC_PublicHeaders
 prepend_include(${TARGET_FOLDER_NAME} SRC_PublicHeaders)
 
 find_package(Threads REQUIRED)
-find_package(SDL2 REQUIRED)
 
 add_executable(${REPO_NAME}
     ${SRC_Cpp})
@@ -20,9 +19,9 @@ target_link_libraries(
                     daq::opendaq
                     whisper
                     whisper-common
+                    SDL2-static
                     Boost::program_options
                     Boost::algorithm
-                    ${SDL2_LIBRARIES}
 )
 
 set_property(TARGET ${REPO_NAME} PROPERTY CXX_STANDARD 20)

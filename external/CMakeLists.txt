@@ -8,4 +8,5 @@ endif()
 include(FetchContent)
 
 add_subdirectory(openDAQ)
+add_subdirectory(SDL)
 add_subdirectory(whisper.cpp)
