@@ -224,7 +224,7 @@ namespace whs
         params.max_tokens = 1;
         params.language = "en";
         params.n_threads = config.n_threads;
-        params.audio_ctx = -1;
+        params.audio_ctx = config.audio_ctx;
         params.speed_up = false;
 
         params.prompt_tokens = prompt_tokens.data();
@@ -248,7 +248,7 @@ namespace whs
         params.max_tokens = config.max_tokens;
         params.language = "en";
         params.n_threads = config.n_threads;
-        params.audio_ctx = -1;
+        params.audio_ctx = config.audio_ctx;
         params.speed_up = false;
         params.temperature = 0.4f;
         params.temperature_inc = 1.0f;
@@ -280,13 +280,15 @@ namespace whs
             .prompt_ms = 5000,
             .capture_id = -1,
             .max_tokens = 32,
+            .audio_ctx = -1,
             .vad_threshold = 0.6f,
             .freq_threshold = 100.0,
             .use_gpu = true,
             .model = "/home/jakob/git/openDAQ-ai/models/ggml-large-v2-q5_0.bin",
             .prompt = "hey darko",
             .commands = "/home/jakob/git/openDAQ-ai/commands/commands.txt",
-            .context = "hello how is it going always use lowercase no punctuation goodbye one two three start stop i you me they hey darko wake wave sleep jump lowercase no ponctuation hello hey darko go to sleep wake up wave by",
+            .context = "hello how is it going always use lowercase no punctuation goodbye one two three start stop i you me they hey darko "
+                       "wake wave sleep jump lowercase no ponctuation hello hey darko go to sleep wake up wave by",
         };
     }
 

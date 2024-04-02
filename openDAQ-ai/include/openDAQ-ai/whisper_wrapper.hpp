@@ -24,6 +24,7 @@ namespace whs
         int32_t prompt_ms;
         int32_t capture_id;
         int32_t max_tokens;
+        int32_t audio_ctx;
         float vad_threshold;
         float freq_threshold;
         bool use_gpu;

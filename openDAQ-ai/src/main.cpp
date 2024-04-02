@@ -44,6 +44,7 @@ void parse_args(int argc, char* argv[], whs::whisper_config& config)
         ("command-ms,cms",  po::value<int32_t>(),       "Command ms")
         ("capture,c",       po::value<int32_t>(),       "Capture device id")
         ("max-tokens,mt",   po::value<int32_t>(),       "Max tokens")
+        ("audio-ctx,ac",    po::value<int32_t>(),       "Audio context")
         ("vad-thold,vth",   po::value<float>(),         "Vad threshold")
         ("freq-thold,fth",  po::value<float>(),         "Frequency threshold")
         ("no-gpu,ng",                                   "Don't use gpu")
@@ -76,6 +77,9 @@ void parse_args(int argc, char* argv[], whs::whisper_config& config)
 
     if (variable_map.count("max-tokens") != 0u)
         config.max_tokens = variable_map["max-tokens"].as<int32_t>();
+
+    if (variable_map.count("audio-ctx") != 0u)
+        config.audio_ctx = variable_map["audio-ctx"].as<int32_t>();
 
     if (variable_map.count("vad-thold") != 0u)
         config.vad_threshold = variable_map["vad-thold"].as<float>();
