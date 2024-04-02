@@ -20,6 +20,8 @@ auto main(int argc, char* argv[]) -> int
     robot_fb = find_robot_fb(obsidian_dev);
 
     auto whisper_config = whs::whisper_get_default_config();
+    parse_args(argc, argv, whisper_config);
+
     auto whisper = whs::whisper::build_whisper(whisper_config);
 
     if (!whisper)
