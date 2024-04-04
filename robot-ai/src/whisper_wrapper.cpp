@@ -7,6 +7,7 @@
 #include <format>
 #include <iostream>
 #include <robot-ai/whisper_wrapper.hpp>
+#include <strstream>
 
 namespace whs
 {
@@ -15,6 +16,7 @@ namespace whs
     whisper::whisper(const whisper_config& config)
         : config{config}
         , audio{audio_buffer_size}
+        , ctx{nullptr}
     {
         if (!std::filesystem::exists(config.model))
             throw std::runtime_error(std::format("{}: error: file '{}' does not exist", __func__, config.model));
@@ -26,21 +28,21 @@ namespace whs
         ctx_params.use_gpu = config.use_gpu;
 
         ctx = whisper_init_from_file_with_params(config.model.c_str(), ctx_params);
+        if (!ctx)
+            throw std::runtime_error(std::format("{}: error: failed to load context", __func__));
 
-        commands = read_commands(config.commands);
-        prompt_tokens = tokenize_prompt(config.prompt);
-        command_tokens = tokenize_commands(commands);
+        commands = load_commands(config.commands);
+        initial_context = load_context(config.context);
     }
 
     whisper::~whisper()
     {
-        audio.pause();
         whisper_free(ctx);
     }
 
     auto whisper::transcribe(const std::vector<float>& pcmf32) -> std::string
     {
-        auto params = whisper_get_full_prompt_params();
+        auto params = whisper_get_full_params();
         if (whisper_full(ctx, params, pcmf32.data(), (int) pcmf32.size()) != 0)
             return "";
 
@@ -50,18 +52,6 @@ namespace whs
             result += whisper_full_get_segment_text(ctx, i);
 
         return ::trim(result);
-    }
-
-    auto whisper::transcribe_commands(const std::vector<float>& pcmf32) -> std::optional<std::string>
-    {
-        auto params = whisper_get_full_command_params();
-        if (whisper_full(ctx, params, pcmf32.data(), (int) pcmf32.size()) != 0)
-            return std::nullopt;
-
-        const std::span<float> logits(whisper_get_logits(ctx), whisper_n_vocab(ctx));
-        const auto [prob, index] = find_best_command(logits);
-
-        return (prob > 0.7f) ? std::make_optional(commands[index]) : std::nullopt;
     }
 
     auto whisper::split_prompt_and_command(const std::string& str) -> std::pair<std::string, std::string>
@@ -82,39 +72,6 @@ namespace whs
         return std::make_pair(::trim(prompt), ::trim(command));
     }
 
-    auto whisper::find_best_command(const std::span<float>& logits) -> std::pair<float, uint32_t>
-    {
-        std::vector<float> probs(logits.size(), 0.0f);
-
-        float max = *std::max_element(std::cbegin(logits), std::cend(logits));
-
-        float sum = 0.0f;
-        for (size_t i = 0; i < logits.size(); ++i)
-        {
-            probs[i] = std::exp(logits[i] - max);
-            sum += probs[i];
-        }
-
-        for (auto& prob : probs)
-            prob /= sum;
-
-        std::vector<std::pair<float, int>> probs_id;
-
-        double psum = 0.0;
-        for (size_t i = 0; i < commands.size(); ++i)
-        {
-            probs_id.emplace_back(probs[command_tokens[i][0]], i);
-            probs_id.back().first += (float) std::accumulate(std::cbegin(command_tokens[i]), std::cend(command_tokens[i]), 0);
-            probs_id.back().first /= (float) command_tokens.size();
-            psum += probs_id.back().first;
-        }
-
-        for (auto& pair : probs_id)
-            pair.first /= (float) psum;
-
-        return *std::max_element(probs_id.cbegin(), probs_id.cend(), [](const auto& a, const auto& b) { return a.first < b.first; });
-    }
-
     void whisper::whisper_loop()
     {
         bool is_running = true;
@@ -130,7 +87,6 @@ namespace whs
             is_running = sdl_poll_events();
 
             std::this_thread::sleep_for(100ms);
-
             audio.get(2000, pcmf32);
 
             if (vad_simple(pcmf32, WHISPER_SAMPLE_RATE, 1000, config.vad_threshold, config.freq_threshold, false))
@@ -152,14 +108,13 @@ namespace whs
         }
     }
 
-    auto whisper::read_commands(const std::string& file_name) -> std::vector<std::string>
+    auto whisper::load_commands(const std::string& file_name) -> std::vector<std::string>
     {
-        std::vector<std::string> commands;
-
-        std::ifstream ifs{file_name};
-        if (!ifs)
+        if (!std::filesystem::exists(file_name))
             throw std::runtime_error(std::format("{}: error: file '{}' does not exist", __func__, file_name));
 
+        std::vector<std::string> commands;
+        std::ifstream ifs{file_name};
         std::string line;
 
         while (std::getline(ifs, line))
@@ -175,65 +130,18 @@ namespace whs
         return commands;
     }
 
-    auto whisper::tokenize_prompt(const std::string& prompt) -> std::vector<whisper_token>
+    auto whisper::load_context(const std::string& file_name) -> std::string
     {
-        std::vector<whisper_token> tokens(max_token_count);
-        const auto n = whisper_tokenize(ctx, prompt.c_str(), tokens.data(), max_token_count);
+        if (!std::filesystem::exists(file_name))
+            throw std::runtime_error(std::format("{}: error: file '{}' does not exist", __func__, file_name));
 
-        if (n < 0)
-            throw std::runtime_error(std::format("{}: error: failed to tokenize the prompt '{}'", __func__, prompt));
-
-        tokens.resize(n);
-        return tokens;
+        std::ifstream ifs{file_name};
+        std::stringstream ss;
+        ss << ifs.rdbuf();
+        return ss.str();
     }
 
-    auto whisper::tokenize_commands(const std::vector<std::string>& commands) -> std::vector<std::vector<whisper_token>>
-    {
-        std::vector<std::vector<whisper_token>> all_tokens;
-        for (const auto& command : commands)
-        {
-            std::array<whisper_token, max_token_count> tokens{0};
-            all_tokens.emplace_back();
-
-            for (auto l = 0; l < command.size(); ++l)
-            {
-                const auto str = std::format(" {}", command.substr(0, l + 1));
-                const auto n = whisper_tokenize(ctx, str.c_str(), tokens.data(), max_token_count);
-
-                if (n < 0)
-                    throw std::runtime_error(std::format("{}: error: failed to tokenize command '{}'", __func__, str));
-
-                if (n == 1)
-                    all_tokens.back().push_back(tokens[0]);
-            }
-        }
-
-        return all_tokens;
-    }
-
-    auto whisper::whisper_get_full_command_params() const -> whisper_full_params
-    {
-        auto params = whisper_full_default_params(WHISPER_SAMPLING_GREEDY);
-        params.print_progress = false;
-        params.print_special = false;
-        params.print_realtime = false;
-        params.print_timestamps = false;
-        params.translate = false;
-        params.no_context = true;
-        params.single_segment = true;
-        params.max_tokens = 1;
-        params.language = "en";
-        params.n_threads = config.n_threads;
-        params.audio_ctx = config.audio_ctx;
-        params.speed_up = false;
-
-        params.prompt_tokens = prompt_tokens.data();
-        params.prompt_n_tokens = prompt_tokens.size();
-
-        return params;
-    }
-
-    auto whisper::whisper_get_full_prompt_params() const -> whisper_full_params
+    auto whisper::whisper_get_full_params() const -> whisper_full_params
     {
         auto params = whisper_full_default_params(WHISPER_SAMPLING_BEAM_SEARCH);
 
@@ -254,7 +162,7 @@ namespace whs
         params.temperature_inc = 1.0f;
         params.greedy.best_of = 5;
         params.beam_search.beam_size = 5;
-        params.initial_prompt = config.context.c_str();
+        params.initial_prompt = initial_context.c_str();
 
         return params;
     }
@@ -284,11 +192,10 @@ namespace whs
             .vad_threshold = 0.6f,
             .freq_threshold = 100.0,
             .use_gpu = true,
-            .model = "/home/jakob/git/openDAQ-ai/models/ggml-small.en.bin",
+            .model = "./models/ggml-small.en.bin",
             .prompt = "hey darko",
-            .commands = "/home/jakob/git/openDAQ-ai/commands/commands.txt",
-            .context = "hello how is it going always use lowercase no punctuation goodbye one two three start stop i you me they hey darko "
-                       "wake wave sleep jump lowercase no ponctuation hello hey darko go to sleep wake up wave wake up darko",
+            .commands = "./commands/commands.txt",
+            .context = "./contexts/whisper-darko.txt",
         };
     }
 

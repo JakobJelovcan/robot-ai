@@ -18,9 +18,9 @@ auto main(int argc, char* argv[]) -> int
     auto llama_config = lma::llama_get_default_config();
     parse_args(argc, argv, whisper_config, llama_config);
 
-    //const auto instance = daq::Instance();
-    //auto device = instance.addDevice("daq.opcua://192.168.10.1");
-    //auto robot_fb = get_robot_fb(device);
+    // const auto instance = daq::Instance();
+    // auto device = instance.addDevice("daq.opcua://192.168.10.1");
+    // auto robot_fb = get_robot_fb(device);
 
     auto whisper = whs::whisper::build_whisper(whisper_config);
     auto llama = lma::llama::build_llama(llama_config);
@@ -28,7 +28,7 @@ auto main(int argc, char* argv[]) -> int
     if (!whisper || !llama)
         exit(EXIT_FAILURE);
 
-    llama->init();
+    llama->init_context();
 
     std::cout << "You: Who are you?" << std::endl;
     std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;
@@ -36,12 +36,18 @@ auto main(int argc, char* argv[]) -> int
     std::cout << "Darko:" << llama->generate_from_prompt("What can you do?") << std::endl;
     std::cout << "You: What is an FFT?" << std::endl;
     std::cout << "Darko:" << llama->generate_from_prompt("What is an FFT?") << std::endl;
-    std::cout << "You: What is an Dewesoft?" << std::endl;
+    std::cout << "You: What is Dewesoft?" << std::endl;
     std::cout << "Darko:" << llama->generate_from_prompt("What is Dewesoft?") << std::endl;
 
-    //whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
+    std::cout << "You: Who are you?" << std::endl;
+    std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;  
 
-    //whisper->whisper_loop();
+    llama->reset_context();
+
+    std::cout << "You: Who are you?" << std::endl;
+    std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;
+
+    // whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
 
     return 0;
 }
@@ -54,20 +60,15 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
     desc.add_options()
         ("help,h",                                      "Print help")
         ("threads,t",       po::value<int32_t>(),       "Number of threads")
-        ("gpu-layers",      po::value<int32_t>(),       "Number of gpu layers")
-        ("prompt-ms",       po::value<int32_t>(),       "Prompt ms")
-        ("command-ms",      po::value<int32_t>(),       "Command ms")
-        ("capture,c",       po::value<int32_t>(),       "Capture device id")
-        ("max-tokens",      po::value<int32_t>(),       "Max tokens")
-        ("audio-ctx",       po::value<int32_t>(),       "Audio context")
+        ("audio-ctx",       po::value<int32_t>(),       "Audio context size")
         ("vad-thold",       po::value<float>(),         "Vad threshold")
         ("freq-thold",      po::value<float>(),         "Frequency threshold")
         ("no-gpu",                                      "Don't use gpu")
         ("whisper-model",   po::value<std::string>(),   "whisper model")
         ("llama-model",     po::value<std::string>(),   "llama model")
         ("commands",        po::value<std::string>(),   "Command file name")
-        ("prompt,p",        po::value<std::string>(),   "Prompt")
-        ("context",         po::value<std::string>(),   "Context");
+        ("llama-context",   po::value<std::string>(),   "llama context")
+        ("whisper-context", po::value<std::string>(),   "whisper context");
 
     po::variables_map variable_map;
     po::store(po::parse_command_line(argc, argv, desc), variable_map);
@@ -82,20 +83,8 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
     if (variable_map.count("threads") != 0u)
         llama_config.n_threads = whisper_config.n_threads = variable_map["threads"].as<int32_t>();
 
-    if (variable_map.count("gpu-layers") != 0u)
-        llama_config.n_gpu_layers = variable_map["gpu-layers"].as<int32_t>();
-
-    if (variable_map.count("prompt-ms") != 0u)
-        whisper_config.prompt_ms = variable_map["prompt-ms"].as<int32_t>();
-
-    if (variable_map.count("command-ms") != 0u)
-        whisper_config.command_ms = variable_map["command-ms"].as<int32_t>();
-
     if (variable_map.count("capture") != 0u)
         whisper_config.capture_id = variable_map["capture"].as<int32_t>();
-
-    if (variable_map.count("max-tokens") != 0u)
-        whisper_config.max_tokens = variable_map["max-tokens"].as<int32_t>();
 
     if (variable_map.count("audio-ctx") != 0u)
         whisper_config.audio_ctx = variable_map["audio-ctx"].as<int32_t>();
@@ -107,7 +96,7 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
         whisper_config.freq_threshold = variable_map["freq-thold"].as<float>();
 
     if (variable_map.count("no-gpu") != 0u)
-        whisper_config.use_gpu = false;
+        llama_config.use_gpu = whisper_config.use_gpu = false;
 
     if (variable_map.count("whisper-model") != 0u)
         whisper_config.model = variable_map["whisper-model"].as<std::string>();
@@ -118,11 +107,11 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
     if (variable_map.count("commands") != 0u)
         whisper_config.commands = variable_map["commands"].as<std::string>();
 
-    if (variable_map.count("prompt") != 0u)
-        whisper_config.prompt = variable_map["prompt"].as<std::string>();
+    if (variable_map.count("whisper-context") != 0u)
+        whisper_config.context = variable_map["whisper-context"].as<std::string>();
 
-    if (variable_map.count("context") != 0u)
-        whisper_config.context = variable_map["context"].as<std::string>();
+    if (variable_map.count("llama-context") != 0u)
+        llama_config.context = variable_map["llama-context"].as<std::string>();
 
     // clang-format on
 }
