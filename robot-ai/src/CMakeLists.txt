@@ -9,22 +9,26 @@ set(SRC_PublicHeaders
     llama_wrapper.hpp
 )
 
+find_package(Threads REQUIRED)
+find_package(SDL2 REQUIRED)
+
+set(LIBS
+    daq::opendaq
+    ggml
+    whisper
+    llama
+    ${SDL2_LIBRARIES}
+    Boost::program_options
+    Boost::algorithm)
+
 prepend_include(${TARGET_FOLDER_NAME} SRC_PublicHeaders)
 
-find_package(Threads REQUIRED)
-
 add_executable(${REPO_NAME}
+    robot_ai.cpp
     ${SRC_Cpp})
 
 target_link_libraries(
-    ${REPO_NAME} PRIVATE
-                    daq::opendaq
-                    ggml
-                    whisper
-                    llama
-                    SDL2-static
-                    Boost::program_options
-                    Boost::algorithm
+    ${REPO_NAME} PRIVATE ${LIBS}
 )
 
 set_property(TARGET ${REPO_NAME} PROPERTY CXX_STANDARD 20)

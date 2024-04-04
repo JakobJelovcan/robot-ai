@@ -17,6 +17,7 @@ set(SRC_PublicHeaders
 prepend_include(${TARGET_FOLDER_NAME} SRC_PublicHeaders)
 
 find_package(Threads REQUIRED)
+find_package(SDL2 REQUIRED)
 
 add_library(${LIB_NAME} STATIC
             ${SRC_Cpp}
@@ -25,7 +26,7 @@ add_library(${LIB_NAME} STATIC
 target_link_libraries(
     ${LIB_NAME} PRIVATE
                 ggml
-                SDL2-static
+                ${SDL2_LIBRARIES}
 )
 
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)
