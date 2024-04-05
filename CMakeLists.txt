@@ -44,6 +44,10 @@ if (NOT MSVC)
         -mssse3
     )
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -gdwarf-2")
+else()
+    add_compile_options(
+        /utf-8
+    )
 endif()
 
 add_subdirectory(whisper)

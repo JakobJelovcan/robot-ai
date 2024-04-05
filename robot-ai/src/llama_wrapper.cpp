@@ -161,7 +161,7 @@ namespace lma
         const auto eos_logit = logits[llama_token_eos(model)];
         llama_sample_repetition_penalties(ctx,
                                           &candidates_p,
-                                          embd_history.data() + std::max(0ul, embd_history.size() - max_history),
+                                          embd_history.data() + std::max((size_t)0, embd_history.size() - max_history),
                                           max_history,
                                           repeat_penalty,
                                           0.0f,
