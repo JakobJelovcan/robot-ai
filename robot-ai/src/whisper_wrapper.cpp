@@ -1,5 +1,5 @@
-#include <whisper/common-sdl.h>
-#include <whisper/common.h>
+#include <whisper-common/common-sdl.h>
+#include <whisper-common/common.h>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <exception>

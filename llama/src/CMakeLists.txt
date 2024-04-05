@@ -29,7 +29,7 @@ add_library(${LIB_NAME} STATIC
 
 target_link_libraries(
     ${LIB_NAME} PRIVATE
-                ggml
+                whisper
 )
 
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)

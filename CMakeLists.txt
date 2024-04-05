@@ -50,6 +50,6 @@ else()
     )
 endif()
 
-add_subdirectory(whisper)
+add_subdirectory(whisper-common)
 add_subdirectory(llama)
 add_subdirectory(${REPO_NAME})
