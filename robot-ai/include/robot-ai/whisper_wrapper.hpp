@@ -40,7 +40,8 @@ namespace whs
         whisper(const whisper_config& config);
         ~whisper();
         std::function<void(const std::string&)> on_command;
-        void whisper_loop();
+        void start_whisper();
+        void stop_whisper();
 
         static auto build_whisper(const whisper_config& config) -> whisper_ptr;
 
@@ -48,18 +49,23 @@ namespace whs
     private:
         static constexpr size_t max_token_count{1024};
         static constexpr size_t audio_buffer_size{30 * 1000};
+        static constexpr float similarity_treshold{0.7f};
 
         const whisper_config config;
         std::string initial_context;
         whisper_context* ctx;
         audio_async audio;
+        std::vector<float> pcmf32;
         std::vector<std::string> commands;
+        std::mutex sync;
+        std::jthread whisper_thread;
 
         auto transcribe(const std::vector<float>& pcmf32) -> std::string;
         auto split_prompt_and_command(const std::string& str) -> std::pair<std::string, std::string>;
         auto load_commands(const std::string& file_name) -> std::vector<std::string>;
         auto load_context(const std::string& file_name) -> std::string;
         auto whisper_get_full_params() const -> whisper_full_params;
+        void whisper_loop(std::stop_token token);
     };
 
     auto whisper_get_default_config() -> whisper_config;

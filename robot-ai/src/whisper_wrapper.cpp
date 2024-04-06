@@ -72,19 +72,35 @@ namespace whs
         return std::make_pair(::trim(prompt), ::trim(command));
     }
 
-    void whisper::whisper_loop()
+    void whisper::start_whisper()
     {
-        bool is_running = true;
+        std::scoped_lock lock{sync};
+        if (whisper_thread.joinable())
+            return;
 
-        std::vector<float> pcmf32;
+        whisper_thread = std::jthread([&](std::stop_token token) { whisper_loop(token); });
+    }
 
+    void whisper::stop_whisper()
+    {
+        std::scoped_lock lock{sync};
+        if (!whisper_thread.joinable())
+            return;
+
+        whisper_thread.request_stop();
+        whisper_thread.join();
+    }
+
+    void whisper::whisper_loop(std::stop_token token)
+    {
         audio.resume();
         std::this_thread::sleep_for(1000ms);
         audio.clear();
 
-        while (is_running)
+        while (true)
         {
-            is_running = sdl_poll_events();
+            if (token.stop_requested())
+                return;
 
             std::this_thread::sleep_for(100ms);
             audio.get(2000, pcmf32);
@@ -100,7 +116,7 @@ namespace whs
                 std::cout << std::format("[whisper_wrapper] Transcription: '{}'", transcription) << std::endl;
 
                 const auto sim = similarity(prompt, config.prompt);
-                if (sim > 0.7f && on_command)
+                if (sim > similarity_treshold && on_command)
                     on_command(command);
 
                 audio.clear();
