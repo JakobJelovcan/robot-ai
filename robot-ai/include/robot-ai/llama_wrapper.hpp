@@ -1,6 +1,7 @@
 #pragma once
 #include <llama/common.h>
 #include <llama/llama.h>
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
