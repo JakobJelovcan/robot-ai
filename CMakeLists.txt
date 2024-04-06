@@ -24,7 +24,7 @@ set(OPENDAQ_ENABLE_OPCUA ON CACHE BOOL "Enable OPCUA")
 set(OPENDAQ_ENABLE_WEBSOCKET_STREAMING ON CACHE BOOL "Enable websocket streaming")
 set(OPENDAQ_ENABLE_NATIVE_STREAMING ON CACHE BOOL "Enable native streaming")
 
-if (NOT MSVC)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(
         -Wno-deprecated
         -mavx
@@ -35,19 +35,19 @@ if (NOT MSVC)
         -mssse3
     )
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -gdwarf-2")
-else()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GCC")
     add_compile_options(
         /utf-8
         /arch:AVX2
         /O2
     )
-endif()
+endif ()
 
 add_subdirectory(external)
 
 project(robot-ai
-        LANGUAGES CXX
-        VERSION 1.0.0
+LANGUAGES CXX
+VERSION 1.0.0
 )
 
 include(cmake/Utils.cmake)
