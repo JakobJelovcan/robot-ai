@@ -32,6 +32,13 @@ target_link_libraries(
                 whisper
 )
 
+if (WHISPER_CUDA)
+    add_compile_definitions(GGML_USE_CUDA)
+elseif(WHISPER_CLBLAST)
+    add_compile_definitions(GGML_USE_CLBLAST)
+endif()
+
+
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_EXTENSIONS OFF)
