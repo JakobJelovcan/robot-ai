@@ -111,21 +111,14 @@ namespace lma
 
             const auto new_token_id = predict_next_token();
 
-            if (new_token_id != llama_token_eos(model))
+            done |= (new_token_id == llama_token_eos(model));
+            if (!done)
             {
                 embd.push_back(new_token_id);
                 result += llama_token_to_piece(ctx, new_token_id);
             }
-            else
-            {
-                done = true;
-            }
 
-            if (auto pos = result.find("Other:", std::max(0, (int32_t)result.size() - 20)); pos != std::string::npos)
-            {
-                result = result.substr(0, pos);
-                done = true;
-            }
+            done |= remove_antiprompt(result);
         }
 
         return result;
@@ -166,6 +159,20 @@ namespace lma
         logits[llama_token_eos(model)] = eos_logit;
 
         return llama_sample_token_greedy(ctx, &candidates_p);
+    }
+
+    auto llama::remove_antiprompt(std::string& str) -> bool
+    {
+        for (const auto& antiprompt : antiprompts)
+        {
+            const auto offset = str.size() - std::min(str.size(), antiprompt.size());
+            if (auto pos = str.find(antiprompt, offset); pos != std::string::npos)
+            {
+                str = str.substr(0, pos);
+                return true;
+            }
+        }
+        return false;
     }
 
     auto llama::load_context(const std::string& file_name) -> std::vector<llama_token>

@@ -7,6 +7,8 @@
 
 namespace lma
 {
+    using namespace std::string_literals;
+
     class llama;
     using llama_ptr = std::unique_ptr<llama>;
 
@@ -36,6 +38,8 @@ namespace lma
     protected:
     private:
         static constexpr size_t max_history{256};
+        static constexpr std::array antiprompts{"You:"s, "Person:"s, "Other:"s};
+
         const llama_config config;
         bool initialized;
         std::vector<llama_token> context_tokens;
@@ -47,6 +51,7 @@ namespace lma
 
         auto tokenize_prompt(std::string prompt) -> std::vector<llama_token>;
         auto load_context(const std::string& file_name) -> std::vector<llama_token>;
+        auto remove_antiprompt(std::string& str) -> bool;
         auto predict_next_token() -> llama_token;
     };
 
