@@ -18,9 +18,9 @@ auto main(int argc, char* argv[]) -> int
     auto llama_config = lma::llama_get_default_config();
     parse_args(argc, argv, whisper_config, llama_config);
 
-    // const auto instance = daq::Instance();
-    // auto device = instance.addDevice("daq.opcua://192.168.10.1");
-    // auto robot_fb = get_robot_fb(device);
+    const auto instance = daq::Instance();
+    auto device = instance.addDevice("daq.opcua://192.168.10.1");
+    auto robot_fb = get_robot_fb(device);
 
     auto whisper = whs::whisper::build_whisper(whisper_config);
     auto llama = lma::llama::build_llama(llama_config);
@@ -28,26 +28,14 @@ auto main(int argc, char* argv[]) -> int
     if (!whisper || !llama)
         exit(EXIT_FAILURE);
 
+    whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
+    whisper->start_whisper();
     llama->init_context();
 
-    std::cout << "You: Who are you?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;
-    std::cout << "You: What can you do?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("What can you do?") << std::endl;
-    std::cout << "You: What is an FFT?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("What is an FFT?") << std::endl;
-    std::cout << "You: What is Dewesoft?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("What is Dewesoft?") << std::endl;
+    std::cout << "Press \"enter\" to exit..." << std::endl;
+    std::cin.get();
 
-    std::cout << "You: Who are you?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;  
-
-    llama->reset_context();
-
-    std::cout << "You: Who are you?" << std::endl;
-    std::cout << "Darko:" << llama->generate_from_prompt("Who are you?") << std::endl;
-
-    // whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
+    whisper->stop_whisper();
 
     return 0;
 }

@@ -1,6 +1,6 @@
-#include <iostream>
-#include <format>
 #include <boost/program_options.hpp>
+#include <format>
+#include <iostream>
 #include <robot-ai/whisper_wrapper.hpp>
 
 void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config)
@@ -59,7 +59,7 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config)
     // clang-format on
 }
 
-auto main(int argc, char *argv[]) -> int
+auto main(int argc, char* argv[]) -> int
 {
     auto config = whs::whisper_get_default_config();
     parse_args(argc, argv, config);
@@ -70,7 +70,12 @@ auto main(int argc, char *argv[]) -> int
 
     whisper->on_command = [&](const auto& cmd) { std::cout << std::format("[whisper_test]: {}", cmd) << std::endl; };
 
-    whisper->whisper_loop();
+    whisper->start_whisper();
+
+    std::cout << "Press \"enter\" to quit" << std::endl;
+    std::cin.get();
+
+    whisper->stop_whisper();
 
     return 0;
 }
