@@ -109,7 +109,7 @@ namespace lma
             if (done)
                 break;
 
-            const auto new_token_id = predict_token();
+            const auto new_token_id = predict_next_token();
 
             if (new_token_id != llama_token_eos(model))
             {
@@ -140,14 +140,10 @@ namespace lma
         return llama_tokenize(ctx, std::format(" {}\nDarko:", prompt), false);
     }
 
-    auto llama::predict_token() -> llama_token
+    auto llama::predict_next_token() -> llama_token
     {
-        static constexpr float repeat_penalty{1.1764f};
-
-        auto logits = llama_get_logits(ctx);
-        auto vocab_size = llama_n_vocab(model);
-
-        // logits[llama_token_eos(model)] = 0;
+        const auto vocab_size = llama_n_vocab(model);
+        std::span<float> logits(llama_get_logits(ctx), vocab_size);
 
         std::vector<llama_token_data> candidates;
         candidates.reserve(vocab_size);
@@ -157,15 +153,15 @@ namespace lma
 
         llama_token_data_array candidates_p{candidates.data(), candidates.size(), false};
 
+        // new line and eos should not be affected by repetition penalties
         const auto nl_logit = logits[llama_token_nl(model)];
         const auto eos_logit = logits[llama_token_eos(model)];
-        llama_sample_repetition_penalties(ctx,
-                                          &candidates_p,
-                                          embd_history.data() + std::max((size_t)0, embd_history.size() - max_history),
-                                          max_history,
-                                          repeat_penalty,
-                                          0.0f,
-                                          0.0f);
+
+        const auto history_keep = std::min(max_history, embd_history.size());
+        const auto history_skip = embd_history.size() - history_keep;
+        llama_sample_repetition_penalties(
+            ctx, &candidates_p, &embd_history[history_skip], history_keep, config.repetition_penalty, 0.0f, 0.0f);
+
         logits[llama_token_nl(model)] = nl_logit;
         logits[llama_token_eos(model)] = eos_logit;
 
@@ -203,6 +199,7 @@ namespace lma
             .n_threads = std::min(4, (int32_t) std::thread::hardware_concurrency()),
             .n_ctx = 2048,
             .n_gpu_layers = 99,
+            .repetition_penalty = 1.1764f,
             .use_gpu = true,
             .model = "./models/phi-2.Q4_0.gguf",
             .context = "./contexts/llama-darko.txt",

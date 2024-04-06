@@ -15,6 +15,7 @@ namespace lma
         int32_t n_threads;
         int32_t n_ctx;
         int32_t n_gpu_layers;
+        float repetition_penalty;
         bool use_gpu;
         std::string model;
         std::string context;
@@ -46,7 +47,7 @@ namespace lma
 
         auto tokenize_prompt(std::string prompt) -> std::vector<llama_token>;
         auto load_context(const std::string& file_name) -> std::vector<llama_token>;
-        auto predict_token() -> llama_token;
+        auto predict_next_token() -> llama_token;
     };
 
     auto llama_get_default_config() -> llama_config;
