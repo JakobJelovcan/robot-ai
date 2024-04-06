@@ -24,15 +24,6 @@ set(OPENDAQ_ENABLE_OPCUA ON CACHE BOOL "Enable OPCUA")
 set(OPENDAQ_ENABLE_WEBSOCKET_STREAMING ON CACHE BOOL "Enable websocket streaming")
 set(OPENDAQ_ENABLE_NATIVE_STREAMING ON CACHE BOOL "Enable native streaming")
 
-add_subdirectory(external)
-
-project(robot-ai
-        LANGUAGES CXX
-        VERSION 1.0.0
-)
-
-include(cmake/Utils.cmake)
-
 if (NOT MSVC)
     add_compile_options(
         -Wno-deprecated
@@ -47,8 +38,19 @@ if (NOT MSVC)
 else()
     add_compile_options(
         /utf-8
+        /arch:AVX2
+        /O2
     )
 endif()
+
+add_subdirectory(external)
+
+project(robot-ai
+        LANGUAGES CXX
+        VERSION 1.0.0
+)
+
+include(cmake/Utils.cmake)
 
 add_subdirectory(whisper-common)
 add_subdirectory(llama)
