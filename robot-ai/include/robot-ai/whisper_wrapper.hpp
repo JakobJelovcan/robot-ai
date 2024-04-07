@@ -1,7 +1,7 @@
 #pragma once
 
-#include <whisper-common/common-sdl.h>
-#include <whisper.h>
+#include <whisper/common-sdl.h>
+#include <whisper/whisper.h>
 #include <functional>
 #include <memory>
 #include <optional>

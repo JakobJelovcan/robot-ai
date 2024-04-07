@@ -8,4 +8,4 @@ endif()
 include(FetchContent)
 
 add_subdirectory(openDAQ)
-add_subdirectory(whisper)
+add_subdirectory(ggml)

@@ -46,12 +46,12 @@ endif ()
 add_subdirectory(external)
 
 project(robot-ai
-LANGUAGES CXX
-VERSION 1.0.0
+    LANGUAGES CXX
+    VERSION 1.0.0
 )
 
 include(cmake/Utils.cmake)
 
-add_subdirectory(whisper-common)
+add_subdirectory(whisper)
 add_subdirectory(llama)
 add_subdirectory(${REPO_NAME})

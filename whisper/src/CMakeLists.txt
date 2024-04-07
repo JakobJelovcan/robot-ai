@@ -1,12 +1,14 @@
-set(LIB_NAME whisper-common)
+set(LIB_NAME whisper)
 
 set(SRC_Cpp
+    whisper.cpp
     common.cpp
     common-sdl.cpp
     common-ggml.cpp
 )
     
 set(SRC_PublicHeaders
+    whisper.h
     common.h
     common-sdl.h
     common-ggml.h
@@ -23,9 +25,15 @@ add_library(${LIB_NAME} STATIC
 
 target_link_libraries(
     ${LIB_NAME} PRIVATE
-                whisper
+                ggml
                 ${SDL2_LIBRARIES}
 )
+
+if (GGML_CUDA)
+    add_compile_definitions(GGML_USE_CUDA)
+elseif(GGML_CLBLAST)
+    add_compile_definitions(GGML_USE_CLBLAST)
+endif()
 
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET ${LIB_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)

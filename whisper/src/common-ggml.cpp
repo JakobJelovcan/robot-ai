@@ -1,4 +1,4 @@
-#include <whisper-common/common-ggml.h>
+#include <whisper/common-ggml.h>
 
 #include <regex>
 #include <map>

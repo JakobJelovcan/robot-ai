@@ -13,8 +13,8 @@ find_package(SDL2 REQUIRED)
 
 set(LIBS
     daq::opendaq
+    ggml
     whisper
-    whisper-common
     llama
     ${SDL2_LIBRARIES}
     Boost::program_options

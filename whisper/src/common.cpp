@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES // for M_PI
 
-#include <whisper-common/common.h>
+#include <whisper/common.h>
 
 #include <cmath>
 #include <cstring>
