@@ -48,6 +48,7 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
     desc.add_options()
         ("help,h",                                      "Print help")
         ("threads,t",       po::value<int32_t>(),       "Number of threads")
+        ("gpu-layers",      po::value<int32_t>(),       "GPU layers")
         ("audio-ctx",       po::value<int32_t>(),       "Audio context size")
         ("vad-thold",       po::value<float>(),         "Vad threshold")
         ("freq-thold",      po::value<float>(),         "Frequency threshold")
@@ -70,6 +71,9 @@ void parse_args(int argc, char* argv[], whs::whisper_config& whisper_config, lma
 
     if (variable_map.count("threads") != 0u)
         llama_config.n_threads = whisper_config.n_threads = variable_map["threads"].as<int32_t>();
+
+    if (variable_map.count("gpu-layers") != 0u)
+        llama_config.n_gpu_layers = variable_map["gpu-layers"].as<int32_t>();
 
     if (variable_map.count("capture") != 0u)
         whisper_config.capture_id = variable_map["capture"].as<int32_t>();

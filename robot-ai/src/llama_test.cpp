@@ -11,6 +11,7 @@ void parse_args(int argc, char* argv[], lma::llama_config& llama_config)
     desc.add_options()
         ("help,h",                                      "Print help")
         ("threads,t",       po::value<int32_t>(),       "Number of threads")
+        ("gpu-layers",      po::value<int32_t>(),       "GPU layers")
         ("no-gpu",                                      "Don't use gpu")
         ("llama-model",     po::value<std::string>(),   "llama model")
         ("llama-context",   po::value<std::string>(),   "llama context");
@@ -27,6 +28,9 @@ void parse_args(int argc, char* argv[], lma::llama_config& llama_config)
 
     if (variable_map.count("threads") != 0u)
         llama_config.n_threads = variable_map["threads"].as<int32_t>();
+
+    if (variable_map.count("gpu-layers") != 0u)
+        llama_config.n_gpu_layers = variable_map["gpu-layers"].as<int32_t>();
 
     if (variable_map.count("no-gpu") != 0u)
         llama_config.use_gpu = false;
@@ -56,7 +60,7 @@ auto main(int argc, char* argv[]) -> int
     {
         std::cout << "You: ";
         std::string prompt;
-        
+
         std::getline(std::cin, prompt);
 
         if (prompt.empty())
