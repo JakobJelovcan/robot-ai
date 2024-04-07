@@ -87,7 +87,7 @@ namespace lma
                     const auto history_keep = (int64_t) std::min(history_available, llama_n_ctx(ctx) - embd_context.size() - embd.size());
                     embd.insert(std::begin(embd), std::end(embd_history) - history_keep, std::end(embd_history));
                     embd.insert(std::begin(embd), std::begin(embd_context), std::end(embd_context));
-                    embd_history.erase(std::begin(embd_history), std::end(embd_history) - history_keep);
+                    embd_history.clear();
                 }
 
                 llama_batch_clear(batch);
