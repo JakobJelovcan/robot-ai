@@ -8,7 +8,7 @@
 
 namespace lma
 {
-    using namespace std::string_literals;
+    using namespace std::string_view_literals;
 
     class llama;
     using llama_ptr = std::unique_ptr<llama>;
@@ -39,7 +39,7 @@ namespace lma
     protected:
     private:
         static constexpr size_t max_history{256};
-        static constexpr std::array antiprompts{"You:"s, "Person:"s, "Other:"s};
+        static constexpr std::array antiprompts{"You:"sv, "Person:"sv, "Other:"sv};
 
         const llama_config config;
         bool initialized;
