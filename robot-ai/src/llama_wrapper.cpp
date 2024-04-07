@@ -118,7 +118,6 @@ namespace lma
                 embd.push_back(new_token_id);
                 result += llama_token_to_piece(ctx, new_token_id);
             }
-            std::cout << llama_token_to_piece(ctx, new_token_id);
 
             done |= remove_antiprompt(result);
         }
