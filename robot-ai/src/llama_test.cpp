@@ -54,7 +54,7 @@ auto main(int argc, char* argv[]) -> int
     if (!llama)
         return 1;
 
-    llama->init_context();
+    llama->init();
 
     while (true)
     {

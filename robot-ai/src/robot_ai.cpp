@@ -30,7 +30,7 @@ auto main(int argc, char* argv[]) -> int
 
     whisper->on_command = [&](const std::string& cmd) { invoke_command(robot_fb, cmd); };
     whisper->start_whisper();
-    llama->init_context();
+    llama->init();
 
     std::cout << "Press \"enter\" to exit..." << std::endl;
     std::cin.get();

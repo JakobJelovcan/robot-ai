@@ -3,7 +3,9 @@
 #include <llama/llama.h>
 #include <array>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace lma
@@ -30,8 +32,7 @@ namespace lma
         llama(const llama_config& config);
         ~llama();
 
-        void init_context();
-        void reset_context();
+        void init();
         auto generate_from_prompt(const std::string& prompt) -> std::string;
 
         static auto build_llama(const llama_config& config) -> llama_ptr;
@@ -42,9 +43,9 @@ namespace lma
         static constexpr std::array antiprompts{"You:"sv, "Person:"sv, "Other:"sv};
 
         const llama_config config;
-        bool initialized;
-        std::vector<llama_token> context_tokens;
+        std::vector<llama_token> embd_context;
         std::vector<llama_token> embd_history;
+        std::mutex sync;
 
         llama_model* model;
         llama_context* ctx;

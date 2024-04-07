@@ -12,7 +12,6 @@ namespace lma
 {
     llama::llama(const llama_config& config)
         : config{config}
-        , initialized{false}
         , ctx{nullptr}
         , model{nullptr}
         , batch{0}
@@ -41,7 +40,7 @@ namespace lma
             throw std::runtime_error(std::format("{}: error: failed to create context", __func__));
 
         // Load context data
-        context_tokens = load_context(config.context);
+        embd_context = load_context(config.context);
 
         // Init batch
         batch = llama_batch_init((int32_t) llama_n_ctx(ctx), 0, 1);
@@ -54,10 +53,13 @@ namespace lma
         llama_backend_free();
     }
 
-    void llama::init_context()
+    void llama::init()
     {
-        initialized = true;
-        embd_history = context_tokens;
+        std::scoped_lock lock{sync};
+        embd_history = embd_context;
+
+        if (embd_history.size() > llama_n_ctx(ctx))
+            throw std::runtime_error(std::format("{}: error: context to large", __func__));
 
         for (llama_pos i = 0; i < embd_history.size(); ++i)
             llama_batch_add(batch, embd_history[i], i, {0}, (i == embd_history.size() - 1));
@@ -66,21 +68,9 @@ namespace lma
             throw std::runtime_error(std::format("{}: error: failed to decoded the batch", __func__));
     }
 
-    void llama::reset_context()
-    {
-        if (!initialized)
-            return;
-
-        initialized = false;
-        llama_batch_clear(batch);
-        embd_history.clear();
-    }
-
     auto llama::generate_from_prompt(const std::string& prompt) -> std::string
     {
-        if (!initialized)
-            init_context();
-
+        std::scoped_lock lock{sync};
         auto embd = tokenize_prompt(prompt);
         bool done = false;
         std::string result;
@@ -90,9 +80,14 @@ namespace lma
             {
                 if (embd_history.size() + (int) embd.size() > llama_n_ctx(ctx))
                 {
-                    const auto keep = (int32_t) std::min(max_history, embd_history.size());
-                    embd.insert(std::begin(embd), std::end(embd_history) - keep, std::end(embd_history));
-                    embd_history.erase(std::begin(embd_history), std::end(embd_history) - keep);
+                    // Out of context space
+                    // Reset to original context + latest history
+
+                    const auto history_available = std::min(max_history, embd_history.size());
+                    const auto history_keep = (int64_t) std::min(history_available, llama_n_ctx(ctx) - embd_context.size() - embd.size());
+                    embd.insert(std::begin(embd), std::end(embd_history) - history_keep, std::end(embd_history));
+                    embd.insert(std::begin(embd), std::begin(embd_context), std::end(embd_context));
+                    embd_history.erase(std::begin(embd_history), std::end(embd_history) - history_keep);
                 }
 
                 llama_batch_clear(batch);
