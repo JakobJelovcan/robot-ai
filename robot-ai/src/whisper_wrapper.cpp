@@ -107,15 +107,16 @@ namespace whs
 
             if (vad_simple(pcmf32, WHISPER_SAMPLE_RATE, 1000, config.vad_threshold, config.freq_threshold, false))
             {
-                std::cout << "Detected sound" << std::endl;
+                std::cout << "[whisper_wrapper] Detected sound. Processing" << std::endl;
                 audio.get(config.command_ms, pcmf32);
 
                 const auto transcription = transcribe(pcmf32);
                 const auto [prompt, command] = split_prompt_and_command(transcription);
 
-                std::cout << std::format("[whisper_wrapper] Transcription: '{}'", transcription) << std::endl;
-
                 const auto sim = similarity(prompt, config.prompt);
+                std::cout << std::format("[whisper_wrapper] (Match: {:.0f}%) Transcription: '{}'", sim * 100.0f, transcription)
+                          << std::endl;
+
                 if (sim > similarity_treshold && on_command)
                     on_command(command);
 
