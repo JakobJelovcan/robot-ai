@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <format>
 #include <iostream>
+#include <regex>
 #include <robot-ai/whisper_wrapper.hpp>
 #include <strstream>
 
@@ -69,7 +70,10 @@ namespace whs
                 command += words[i] + " ";
         }
 
-        return std::make_pair(::trim(prompt), ::trim(command));
+        prompt = ::trim(std::regex_replace(prompt, std::regex("[^a-zA-Z ]"), ""));
+        command = ::trim(command);
+
+        return std::make_pair(prompt, command);
     }
 
     void whisper::start_whisper()
