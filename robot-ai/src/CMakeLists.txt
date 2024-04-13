@@ -17,6 +17,7 @@ set(LIBS
     whisper
     llama
     ${SDL2_LIBRARIES}
+    Boost::asio
     Boost::program_options
     Boost::algorithm)
 
