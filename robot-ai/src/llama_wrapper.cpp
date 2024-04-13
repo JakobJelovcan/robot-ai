@@ -89,6 +89,8 @@ namespace lma
                     embd.insert(std::begin(embd), std::end(embd_history) - history_keep, std::end(embd_history));
                     embd.insert(std::begin(embd), std::begin(embd_context), std::end(embd_context));
                     embd_history.clear();
+
+                    llama_kv_cache_clear(ctx);
                 }
 
                 llama_batch_clear(batch);
