@@ -41,6 +41,7 @@ namespace lma
 
         // Load context data
         embd_context = load_context(config.context);
+        std::cout << std::format("llama_initial_context_size: {}", embd_context.size()) << std::endl;
 
         // Init batch
         batch = llama_batch_init((int32_t) llama_n_ctx(ctx), 0, 1);
