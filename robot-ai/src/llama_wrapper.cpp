@@ -207,7 +207,7 @@ namespace lma
             .n_gpu_layers = 99,
             .repetition_penalty = 1.1764f,
             .use_gpu = true,
-            .model = "./models/phi-2.Q4_0.gguf",
+            .model = "./models/llama-2-7b-chat.Q5_K_M.gguf",
             .context = "./contexts/llama-darko.txt",
         };
     }
