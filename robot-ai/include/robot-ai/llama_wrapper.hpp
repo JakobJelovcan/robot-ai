@@ -40,7 +40,7 @@ namespace lma
     protected:
     private:
         static constexpr size_t max_history{256};
-        static constexpr std::array antiprompts{"You:"sv, "Person:"sv, "Other:"sv};
+        static constexpr std::array antiprompts{"[Answer]"sv, "[Question]"sv};
 
         const llama_config config;
         std::vector<llama_token> embd_context;

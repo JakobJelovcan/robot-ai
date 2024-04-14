@@ -125,11 +125,11 @@ namespace lma
 
     auto llama::tokenize_prompt(std::string prompt) -> std::vector<llama_token>
     {
-        prompt = std::regex_replace(prompt, std::regex("(\\[.*?\\])|(\\(.*?\\))|([^a-zA-Z0-9\\.,\\?!\\s\\:\\'\\-])"), "");
+        prompt = std::regex_replace(prompt, std::regex(R"((\[.*?\])|(\(.*?\))|([^a-zA-Z0-9\.,\?!\s\:\'\-]))"), "");
         prompt = prompt.substr(0, prompt.find('\n'));
         prompt = std::regex_replace(prompt, std::regex("(^\\s+)|(\\s+$)"), "");
 
-        return llama_tokenize(ctx, std::format(" {}\nDarko:", prompt), false);
+        return llama_tokenize(ctx, std::format(" {}\n[Answer]", prompt), false);
     }
 
     auto llama::predict_next_token() -> llama_token
