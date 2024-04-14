@@ -71,6 +71,7 @@ namespace whs
         }
 
         prompt = ::trim(std::regex_replace(prompt, std::regex("[^a-zA-Z ]"), ""));
+        std::transform(std::begin(prompt), std::end(prompt), std::begin(prompt), ::tolower);
         command = ::trim(command);
 
         return std::make_pair(prompt, command);
