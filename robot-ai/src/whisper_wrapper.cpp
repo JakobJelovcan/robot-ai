@@ -213,7 +213,7 @@ namespace whs
             .vad_threshold = 0.6f,
             .freq_threshold = 100.0,
             .use_gpu = true,
-            .model = "./models/ggml-small.en.bin",
+            .model = "./models/ggml-medium.en-q5_0.bin",
             .prompt = "hey darko",
             .commands = "./commands/commands.txt",
             .context = "./contexts/whisper-darko.txt",
