@@ -41,6 +41,9 @@ target_include_directories(${REPO_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../in
                                               ${CMAKE_CURRENT_BINARY_DIR}/../include
 )
 
+add_dependencies(${REPO_NAME} daq::opcua_client_module)
+add_dependencies(${REPO_NAME} daq::native_stream_cl_module)
+
 # whisper test
 
 add_executable(whisper_test
