@@ -6,7 +6,7 @@
 #include <regex>
 #include <robot-ai/llama_wrapper.hpp>
 #include <span>
-#include <strstream>
+#include <sstream>
 
 namespace lma
 {

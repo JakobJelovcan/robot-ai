@@ -8,7 +8,7 @@
 #include <iostream>
 #include <regex>
 #include <robot-ai/whisper_wrapper.hpp>
-#include <strstream>
+#include <sstream>
 
 namespace whs
 {
