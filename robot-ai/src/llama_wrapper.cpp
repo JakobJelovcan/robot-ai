@@ -195,7 +195,7 @@ namespace lma
         }
         catch (const std::exception& e)
         {
-            std::cerr << std::format("Failed to build llama {}", __func__, e.what()) << std::endl;
+            std::cerr << std::format("Failed to build llama: {}", e.what()) << std::endl;
             return nullptr;
         }
     }
